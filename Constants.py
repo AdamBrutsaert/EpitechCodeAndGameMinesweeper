@@ -1,10 +1,10 @@
 # Settings
-DEBUG = True
+DEBUG = False
 
 # Board
 BOARD_ROWS            = 25
 BOARD_COLUMNS         = 25
-BOARD_BOMB_PERCENTAGE = 0.2
+BOARD_MINE_PERCENTAGE = 0.2
 
 # Size of cells
 CELL_SIZE = 25
@@ -17,17 +17,17 @@ TEXT_COLOR         = (255, 255, 255)
 UNDISCOVERED_COLOR = (160, 160, 160)
 
 # Cells
-BOMB         = -2
+MINE         = -2
 UNDISCOVERED = -1
 EMPTY        =  0
-ONE_BOMB     =  1
-TWO_BOMBS    =  2
-THREE_BOMBS  =  3
-FOUR_BOMBS   =  4
-FIVE_BOMBS   =  5
-SIX_BOMBS    =  6
-SEVEN_BOMBS  =  7
-EIGHT_BOMBS  =  8
+ONE_MINE     =  1
+TWO_MINES    =  2
+THREE_MINES  =  3
+FOUR_MINES   =  4
+FIVE_MINES   =  5
+SIX_MINES    =  6
+SEVEN_MINES  =  7
+EIGHT_MINES  =  8
 
 # Window
 PADDING       = 20
