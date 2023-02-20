@@ -12,6 +12,7 @@ class Minesweeper:
         self.create_grid()
         self.generate_mines()
 
+        self.flags = []
         self.hasLost = False
 
     def load_resources(self):
@@ -27,6 +28,7 @@ class Minesweeper:
             font.render("8", True, TEXT_COLOR)
         ]
         self.mine = pg.image.load("assets/mine.png").convert_alpha()
+        self.flag = pg.image.load("assets/flag.png").convert_alpha()
 
     def draw_borders(self):
         for column in range(GRID_COLUMNS + 1):
@@ -62,15 +64,23 @@ class Minesweeper:
             y = PADDING + row * (CELL_SIZE + CELL_BORDER) + CELL_BORDER
             self.screen.blit(self.mine, (x, y))
 
+    def draw_flags(self):
+        for flag in self.flags:
+            x = PADDING + flag[1] * (CELL_SIZE + CELL_BORDER) + CELL_BORDER
+            y = PADDING + flag[0] * (CELL_SIZE + CELL_BORDER) + CELL_BORDER
+            self.screen.blit(self.flag, (x, y))
+
     def draw(self):
         self.screen.fill(BACKGROUND_COLOR)
         self.draw_borders()
         for row in range(GRID_ROWS):
             for column in range(GRID_COLUMNS):
                 self.draw_cell(row, column)
+        if not self.hasLost:
+            self.draw_flags()
         pg.display.flip()
 
-    def on_click(self, pos):
+    def on_left_click(self, pos):
         if self.hasLost:
             return
 
@@ -78,9 +88,27 @@ class Minesweeper:
         column = (pos[0] - PADDING) / (CELL_SIZE + CELL_BORDER)
 
         if row < 0 or column < 0 or row >= GRID_ROWS or column >= GRID_COLUMNS:
-            return False
+            return
 
-        return self.reveal(int(row), int(column))
+        if self.reveal(int(row), int(column)):
+            self.hasLost = True
+
+    def on_right_click(self, pos):
+        if self.hasLost:
+            return
+
+        row = (pos[1] - PADDING) / (CELL_SIZE + CELL_BORDER)
+        column = (pos[0] - PADDING) / (CELL_SIZE + CELL_BORDER)
+
+        if row < 0 or column < 0 or row >= GRID_ROWS or column >= GRID_COLUMNS:
+            return
+
+        row = int(row)
+        column = int(column)
+
+        if (row, column) in self.flags or self.grid[row][column] >= 0:
+            return
+        self.flags += [(row, column)]
 
     def run(self):
         running = True
@@ -89,10 +117,13 @@ class Minesweeper:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     running = False
-                if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
-                    if self.on_click(event.pos):
-                        self.hasLost = True
-                    self.draw()
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if event.button == pg.BUTTON_LEFT:
+                        self.on_left_click(event.pos)
+                        self.draw()
+                    if event.button == pg.BUTTON_RIGHT:
+                        self.on_right_click(event.pos)
+                        self.draw()
 
     def create_grid(self):
         self.grid = [[UNDISCOVERED for column in range(GRID_COLUMNS)] for row in range(GRID_ROWS)]
@@ -121,6 +152,9 @@ class Minesweeper:
         if (self.grid[row][column] == MINE):
             return True
 
+        if (row, column) in self.flags:
+            self.flags.remove((row, column))
+
         count = 0
         for row_offset in range(-1, 2):
             for column_offset in range(-1, 2):
@@ -131,11 +165,10 @@ class Minesweeper:
             self.grid[row][column] = count
         else:
             self.grid[row][column] = EMPTY
-            if (self.reveal(row - 1, column)
-                or self.reveal(row + 1, column)
-                or self.reveal(row, column - 1)
-                or self.reveal(row, column + 1)):
-                return True
+            self.reveal(row - 1, column)
+            self.reveal(row + 1, column)
+            self.reveal(row, column - 1)
+            self.reveal(row, column + 1)
 
         return False
 
