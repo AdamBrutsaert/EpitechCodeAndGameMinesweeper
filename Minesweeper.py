@@ -12,6 +12,8 @@ class Minesweeper:
         self.create_grid()
         self.generate_mines()
 
+        self.hasLost = False
+
     def load_resources(self):
         font = pg.font.SysFont("Arial", 16)
         self.texts = [
@@ -27,7 +29,7 @@ class Minesweeper:
         self.mine = pg.image.load("assets/mine.png").convert_alpha()
 
     def draw_borders(self):
-        for column in range(BOARD_COLUMNS + 1):
+        for column in range(GRID_COLUMNS + 1):
             x = PADDING + column * (CELL_SIZE + CELL_BORDER)
             y = PADDING
             width = CELL_BORDER
@@ -35,7 +37,7 @@ class Minesweeper:
 
             pg.draw.rect(self.screen, BORDER_COLOR, (x, y, width, height))
 
-        for row in range(BOARD_ROWS + 1):
+        for row in range(GRID_ROWS + 1):
             x = PADDING
             y = PADDING + row * (CELL_SIZE + CELL_BORDER)
             width = SCREEN_WIDTH - 2 * PADDING
@@ -55,7 +57,7 @@ class Minesweeper:
             y = PADDING + row * (CELL_SIZE + CELL_BORDER) + CELL_BORDER
             self.screen.blit(self.texts[self.grid[row][column] - 1], (x, y))
 
-        if DEBUG and self.grid[row][column] == MINE:
+        if self.hasLost and self.grid[row][column] == MINE:
             x = PADDING + column * (CELL_SIZE + CELL_BORDER) + CELL_BORDER
             y = PADDING + row * (CELL_SIZE + CELL_BORDER) + CELL_BORDER
             self.screen.blit(self.mine, (x, y))
@@ -63,16 +65,19 @@ class Minesweeper:
     def draw(self):
         self.screen.fill(BACKGROUND_COLOR)
         self.draw_borders()
-        for row in range(BOARD_ROWS):
-            for column in range(BOARD_COLUMNS):
+        for row in range(GRID_ROWS):
+            for column in range(GRID_COLUMNS):
                 self.draw_cell(row, column)
         pg.display.flip()
 
     def on_click(self, pos):
+        if self.hasLost:
+            return
+
         row = (pos[1] - PADDING) / (CELL_SIZE + CELL_BORDER)
         column = (pos[0] - PADDING) / (CELL_SIZE + CELL_BORDER)
 
-        if row < 0 or column < 0 or row >= BOARD_ROWS or column >= BOARD_COLUMNS:
+        if row < 0 or column < 0 or row >= GRID_ROWS or column >= GRID_COLUMNS:
             return False
 
         return self.reveal(int(row), int(column))
@@ -86,30 +91,30 @@ class Minesweeper:
                     running = False
                 if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
                     if self.on_click(event.pos):
-                        return
+                        self.hasLost = True
                     self.draw()
 
     def create_grid(self):
-        self.grid = [[UNDISCOVERED for column in range(BOARD_COLUMNS)] for row in range(BOARD_ROWS)]
+        self.grid = [[UNDISCOVERED for column in range(GRID_COLUMNS)] for row in range(GRID_ROWS)]
 
     def generate_mines(self):
-        remaining = int(BOARD_ROWS * BOARD_COLUMNS * BOARD_MINE_PERCENTAGE)
+        remaining = int(GRID_ROWS * GRID_COLUMNS * GRID_MINE_PERCENTAGE)
 
         while remaining:
-            row = randint(0, BOARD_ROWS - 1)
-            column = randint(0, BOARD_COLUMNS - 1)
+            row = randint(0, GRID_ROWS - 1)
+            column = randint(0, GRID_COLUMNS - 1)
 
             if self.grid[row][column] == UNDISCOVERED:
                 self.grid[row][column] = MINE
                 remaining -= 1
 
     def is_bomb(self, row, column):
-        if row < 0 or column < 0 or row >= BOARD_ROWS or column >= BOARD_COLUMNS:
+        if row < 0 or column < 0 or row >= GRID_ROWS or column >= GRID_COLUMNS:
             return False
         return self.grid[row][column] == MINE
 
     def reveal(self, row, column):
-        if row < 0 or column < 0 or row >= BOARD_ROWS or column >= BOARD_COLUMNS:
+        if row < 0 or column < 0 or row >= GRID_ROWS or column >= GRID_COLUMNS:
             return False
         if (self.grid[row][column] == EMPTY):
             return False
